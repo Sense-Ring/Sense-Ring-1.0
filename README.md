@@ -36,7 +36,7 @@ Use it to explore photoplethysmography (PPG), heart-rate and SpO₂ algorithm de
 The nRF52832 communicates with the PPG sensor, accelerometer, and charger over a shared I²C bus. Dedicated interrupt lines allow the sensors and PMIC to wake the processor. The PPG LED supply and battery-measurement divider are independently switchable, limiting leakage when those functions are idle.
 
 <p align="center">
-  <img src="Images/Diagram_whitebg.jpg" alt="SenseRing 1.0 diagram" width="700" />
+  <img src="Images/Diagram_whitebg.png" alt="SenseRing 1.0 diagram" width="700" />
 </p>
 
 | Signal | nRF52832 pin | Connected function |
