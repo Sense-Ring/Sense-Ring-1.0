@@ -1,10 +1,10 @@
 # SenseRing
 
-**Open-source biosensing and motion tracking, packed into a ring you can build, program, and improve.**
+**Open-source smart ring for biosensing and motion tracking, packed into a format you can build, program, and improve.**
 
-SenseRing is a compact, finger-worn research and development platform built around the Nordic Semiconductor [nRF52832](https://www.nordicsemi.com/Products/nRF52832) Bluetooth Low Energy SoC. Its custom 14.9 × 10 mm PCB combines optical pulse sensing, motion sensing, wireless connectivity, battery charging, and power management in a wearable form factor.
+SenseRing is a compact, finger-worn research and development platform built around the Nordic Semiconductor [nRF52832](https://www.nordicsemi.com/Products/nRF52832) Bluetooth Low Energy SoC. Its custom electronics combine optical pulse sensing, motion sensing, wireless connectivity, battery charging, and power management in a wearable form factor.
 
-Use it to explore photoplethysmography (PPG), heart-rate and SpO₂ algorithm development, activity and gesture recognition, low-power Bluetooth applications, and new wearable interfaces. The repository contains the editable electronics and enclosure sources—not just renders—so the design can be studied, reproduced, and extended.
+Use it to explore photoplethysmography (PPG), heart-rate and SpO₂ algorithm development, activity and gesture recognition, low-power Bluetooth applications, and new wearable interfaces. 
 
 <p align="center">
   <img src="Images/Hand.jpg" alt="SenseRing 1.0 prototype worn on a finger" width="500" />
@@ -22,9 +22,9 @@ Use it to explore photoplethysmography (PPG), heart-rate and SpO₂ algorithm de
 | Motion sensing | [BMA530](https://www.bosch-sensortec.com/en/products/motion-sensors/accelerometers/bma530) ultra-compact, low-power 3-axis accelerometer with motion interrupts and step-counting support |
 | Battery charging | [BQ25180](https://www.ti.com/product/BQ25180) single-cell Li-ion/LiPo charger with I²C control, power path, and ship mode |
 | Power and protection | AP6683 battery protection, XC6504A1819R-G 1.8 V LDO, and two WS4622C load switches for the PPG LED supply and battery-measurement circuit |
-| RF front end | 2450AT18B100E 2.4 GHz chip antenna and 32 MHz crystal |
-| Debugging and test | TC2030 SWD footprint plus reset, I²C, UART-labelled, battery, and power test points |
-| PCB | 14.9 × 10 mm, two copper layers, fine-pitch WLCSP and 0201 components |
+| RF front end | 2450AT18B100E 2.4 GHz chip antenna and matching circuit |
+| Debugging and test | TC2030 SWD footprint for programming and charging, compatible with Segger J-Link 6-pin Needle Adapters |
+| PCB | 14.9 × 10 mm, two copper layers, mostly fine-pitch WLCSP and 0201 components |
 
 <p align="center">
   <img src="Images/Ring.jpg" alt="SenseRing optical sensor operating inside the ring" width="46%" />
@@ -52,10 +52,10 @@ The nRF52832 communicates with the PPG sensor, accelerometer, and charger over a
 
 | Path | Contents |
 | --- | --- |
-| [`Hardware/`](Hardware/) | Autodesk Fusion Electronics/EAGLE schematic and board sources (`.fsch`, `.fbrd`, `.sch`, `.brd`) and a ready-to-view [schematic PDF](Hardware/SenseRing_schematic.pdf) |
+| [`Hardware/`](Hardware/) | Autodesk Fusion Electronics/EAGLE schematic and board sources (`.fsch`, `.fbrd`, `.sch`, `.brd`) and a [schematic PDF](Hardware/SenseRing_schematic.pdf) |
 | [`Mechanical/`](Mechanical/) | Complete Fusion 360 archive, STEP and OBJ assemblies, printable shell STLs, board and battery models, and two programming-fixture STLs |
 | [`Images/`](Images/) | Prototype photographs and the exploded assembly render used in this README |
-| [`Software/`](Software/) | Reserved for firmware; no firmware application is included in the current release |
+| [`Software/`](Software/) | Firmware and mobile app |
 
 ## Working with the design
 
