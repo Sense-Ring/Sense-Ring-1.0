@@ -83,7 +83,6 @@ cd Sense-Ring-1.0
 
 The PCB exposes `SWDIO`, `SWDCLK`, `RESET`, 1.8 V, +5 V, and GND through its TC2030 programming footprint. Use a compatible SWD debugger and verify the target-voltage and power configuration before connecting it to the board.
 
-Firmware has not yet been published in this repository. Until it is added, the hardware files and signal table above are the authoritative starting point for a new nRF52832 application.
 
 ## Manufacturing notes
 
@@ -91,13 +90,6 @@ This is a miniaturized wearable design using WLCSP/BGA packages and 0201 passive
 
 The current repository does **not** include production exports such as Gerbers, drill files, a bill of materials, or pick-and-place data. Generate and verify those outputs from the hardware sources before ordering boards. Battery selection, charge settings, clearances, enclosure material, skin contact, RF performance, and optical performance must all be validated for your implementation.
 
-## Project status
-
-- Hardware source: published
-- Mechanical source and printable prototypes: published
-- Functional prototype: shown in the repository images
-- Firmware: not yet published
-- Medical validation or certification: not provided
 
 ## Contributing
 
