@@ -35,6 +35,36 @@ Use it to explore photoplethysmography (PPG), heart-rate and SpO₂ algorithm de
 
 The nRF52832 communicates with the PPG sensor, accelerometer, and charger over a shared I²C bus. Dedicated interrupt lines allow the sensors and PMIC to wake the processor. The PPG LED supply and battery-measurement divider are independently switchable, limiting leakage when those functions are idle.
 
+flowchart LR
+  POWER["Power subsystem<br/>+5 V → <b>BQ25180</b> charger<br/>LiPo + AP6683 protection<br/>XC6504 1.8 V LDO"]
+  BATMON["Battery measurement<br/>WS4622C + divider"]
+  DEBUG["Programming and test<br/>TC2030 SWD<br/>I²C + UART pads"]
+  MCU["<b>nRF52832</b><br/>Bluetooth LE SoC"]
+  PPG["Optical sensing<br/><b>MAX30102</b><br/>WS4622C VLED switch"]
+  IMU["Motion sensing<br/><b>BMA530</b><br/>3-axis accelerometer"]
+  RF["RF and clock<br/>32 MHz crystal<br/>2.4 GHz antenna"]
+
+  POWER -->|"1.8 V"| MCU
+  POWER -->|"VBAT"| BATMON
+  POWER -->|"VBAT"| PPG
+  BATMON -->|"enable + ADC"| MCU
+  DEBUG <--> MCU
+  MCU <-->|"I²C + interrupt"| PPG
+  MCU <-->|"I²C + interrupt"| IMU
+  MCU --- RF
+
+  classDef power fill:#f8e2d0,stroke:#a66c42,color:#172033
+  classDef compute fill:#d8efd7,stroke:#618b62,color:#172033,stroke-width:2px
+  classDef sensor fill:#e5ddf5,stroke:#7e6aa5,color:#172033
+  classDef rf fill:#fff0bd,stroke:#aa8530,color:#172033
+  classDef interface fill:#dbe9f4,stroke:#5d7d96,color:#172033
+
+  class POWER,BATMON power
+  class MCU compute
+  class IMU,PPG sensor
+  class RF rf
+  class DEBUG interface
+
 | Signal | nRF52832 pin | Connected function |
 | --- | --- | --- |
 | `SDA` | `P0.29 / AIN5` | MAX30102, BMA530, and BQ25180 data |
