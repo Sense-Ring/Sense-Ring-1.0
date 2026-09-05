@@ -24,6 +24,7 @@ Use it to explore photoplethysmography (PPG), heart-rate and SpO₂ algorithm de
 | Power and protection | [AP6683](https://www.lcsc.com/datasheet/C2849565.pdf) battery protection, [XC6504A1819R-G](https://www.lcsc.com/datasheet/C5142782.pdf) 1.8 V LDO, and two [WS4622C](https://www.lcsc.com/datasheet/C2939859.pdf) load switches for the PPG LED supply and battery-measurement circuit |
 | RF front end | [2450AT18B100E](https://www.lcsc.com/datasheet/C2917717.pdf) 2.4 GHz chip antenna and matching circuit |
 | Debugging and test | TC2030 SWD footprint for programming and charging, compatible with [Segger J-Link 6-pin Needle Adapters](https://www.segger.com/products/debug-probes/j-link/accessories/adapters/6-pin-needle-adapter/) |
+|Battery| 31mAh curved [GRP1607034](https://www.grepow.com/wearables/smart-ring.html)|
 | PCB | 14.9 × 10 mm, two copper layers, mostly fine-pitch WLCSP and 0201 components |
 
 <p align="center">
