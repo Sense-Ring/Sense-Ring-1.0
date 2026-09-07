@@ -1,0 +1,9 @@
+manifest:
+  projects:
+    - name: sensering-v29
+      path: .
+      groups:
+        - board
+    - name: segger
+      url: https://github.com/zephyrproject-rtos/segger
+      revision: v1.0.0

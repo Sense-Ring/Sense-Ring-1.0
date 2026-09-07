@@ -1,0 +1,6 @@
+board:
+  name: sensering_v29
+  full_name: SenseRing v29
+  vendor: sensering
+  socs:
+    - name: nrf52832

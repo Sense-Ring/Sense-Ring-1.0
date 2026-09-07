@@ -1,0 +1,202 @@
+/dts-v1/;
+#include <nordic/nrf52832_qfaa.dtsi>
+#include <zephyr/dt-bindings/adc/adc.h>
+
+/ {
+    model = "SenseRing v29";
+    compatible = "sensering,sensering-v29";
+
+    chosen {
+        zephyr,sram = &sram0;
+        zephyr,flash = &flash0;
+        /* Keep the settings/NVS backend off the vitals-log partition. Without
+         * this it defaults to storage_partition, which flash_store.c erases at
+         * boot and laps over in normal running -- taking the BLE bond keys
+         * with it.
+         */
+        zephyr,settings-partition = &settings_partition;
+    };
+
+    /* Updated hardware-aware mapping for your load switches */
+    power_switches {
+        compatible = "gpio-leds";
+        led_en_switch: switch_1 {
+            gpios = <&gpio0 1 GPIO_ACTIVE_HIGH>; /* Moved from P0.10 -> P0.01 */
+            label = "VLED Rail Load Switch Enable";
+        };
+        vbat_en_switch: switch_2 {
+            gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>; /* Moved from P0.09 -> P0.00 */
+            label = "Battery Voltage Divider Enable";
+        };
+    };
+
+    /* Explicitly mapping the hardware interrupt inputs to give names to pins */
+    interrupt_signals {
+        compatible = "gpio-keys";
+        ppg_int_pin: int_ppg {
+            gpios = <&gpio0 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+            label = "MAX30102 Interrupt Line";
+        };
+        pmic_int_pin: int_pmic {
+            gpios = <&gpio0 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+            label = "BQ25180 PMIC Interrupt Line";
+        };
+        imu_int_pin: int_imu {
+            gpios = <&gpio0 18 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+            label = "BMA530 IMU Interrupt Line";
+        };
+    };
+
+    /* The cell reaches this divider only while vbat_en_switch holds U4 on, so
+     * the legs below burn 1.7uA during a reading and nothing at all between
+     * them. The tap sits on AIN3.
+     */
+    vbat: vbat {
+        compatible = "voltage-divider";
+        io-channels = <&adc 3>;
+        output-ohms = <1000000>;  /* R6 */
+        full-ohms = <2500000>;    /* R5 (1M5) + R6 (1M) */
+    };
+};
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        boot_partition: partition@0 {
+            label = "mcuboot";
+            reg = <0x00000000 0xc000>;
+        };
+        slot0_partition: partition@c000 {
+            label = "image-0";
+            reg = <0x0000c000 0x32000>;
+        };
+        /* What used to be image-1 (200KB) and image-scratch (32KB) is now the
+         * vitals log. MCUboot is not built and nothing links against these
+         * slots (ARCHITECTURE.md App. C), so before this they were 232KB of
+         * flash the device carried and never touched.
+         *
+         * **The trade, made deliberately: this gives up OTA updates** unless the
+         * space is reclaimed later. What it buys is buffer depth -- the ring
+         * goes from ~8.6 hours uncollected to a bit over four days, which is
+         * the difference between a wearer who leaves their phone charging
+         * overnight losing the early hours of a night and losing nothing.
+         * That failure is specific and plausible; a firmware update path that
+         * has never been built is not.
+         *
+         * Reclaiming it later means shrinking this back to 0x6000 at 0x7a000
+         * and restoring the two slots. Records are RAM-addressed by sequence
+         * number and erased at boot, so nothing on flash has to migrate.
+         */
+        storage_partition: partition@3e000 {
+            label = "storage";
+            reg = <0x0003e000 0x3a000>;
+        };
+        /* NVS-backed settings store for BLE bond keys (see CONFIG_BT_SETTINGS).
+         * Two pages is the NVS minimum: the backend needs at least two 4KB
+         * erase sectors for its garbage collection.
+         *
+         * **Deliberately left where it was.** The obvious tidier layout moves
+         * this to the end and lets storage run contiguously to 0x80000, but the
+         * NVS content is addressed by partition offset: moving it discards every
+         * stored bond *and* the BLE identity address, so every paired phone
+         * would need re-pairing and every standing auto-connect request would be
+         * waiting for a peer that no longer exists (§5B.5). Twenty-four
+         * kilobytes of buffer is not worth that.
+         */
+        settings_partition: partition@78000 {
+            label = "settings";
+            reg = <0x00078000 0x2000>;
+        };
+        /* 0x7a000-0x80000 is the old 24KB storage partition, now unallocated.
+         * It is stranded on the far side of `settings` and cannot be merged
+         * into the log, which has to be one contiguous flash area. Left out of
+         * the table rather than relabelled, so it reads as spare rather than as
+         * something with a purpose.
+         */
+    };
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+&gpiote {
+    status = "okay";
+};
+
+&adc {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    /* The divider scales a full 4.2V cell down to 1.68V, so 1/3 gain against
+     * the internal 0.6V reference gives a 1.8V full scale that covers the cell
+     * with a little room left over. R5 and R6 in parallel present 600k to the
+     * SAADC, which is why the sampling capacitor needs the longest acquisition
+     * window the peripheral offers.
+     */
+    channel@3 {
+        reg = <3>;
+        zephyr,gain = "ADC_GAIN_1_3";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 40)>;
+        zephyr,input-positive = <NRF_SAADC_AIN3>;
+        zephyr,resolution = <12>;
+        /* The PPG pulses ~10mA of LED drive off the same cell, so average 16
+         * conversions to keep that ripple out of the reading.
+         */
+        zephyr,oversampling = <4>;
+    };
+};
+
+/* Shared I2C (TWI) Bus Mapping using your updated hardware boundaries */
+&i2c0 {
+    status = "okay";
+    pinctrl-0 = <&i2c0_default>;
+    pinctrl-1 = <&i2c0_sleep>;
+    pinctrl-names = "default", "sleep";
+    clock-frequency = <I2C_BITRATE_FAST>; /* 400 kHz bus clock speed */
+
+    max30102: max30102@57 {
+        compatible = "i2c-device";
+        reg = <0x57>;
+        label = "MAX30102_PPG";
+    };
+
+    /* The v49 schematic (designator AC2) fits a BMA530, not the BMA456 this
+     * node used to claim. Different part, different generation, incompatible
+     * register map. 0x18 is the BMA530's fixed default address -- the 6-ball
+     * WLCSP exposes no SDO pin, so unlike the BMA456 there is nothing to strap.
+     */
+    bma530: bma530@18 {
+        compatible = "i2c-device";
+        reg = <0x18>;
+        label = "BMA530_IMU";
+    };
+};
+
+/* Pin control management updated from (P0.26/P0.27) -> (P0.29/P0.28) */
+&pinctrl {
+    i2c0_default: i2c0_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 29)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 28)>;
+            bias-pull-up;
+        };
+    };
+
+    i2c0_sleep: i2c0_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 29)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 28)>;
+            low-power-enable;
+        };
+    };
+};
+
+&clock {
+    status = "okay";
+};
