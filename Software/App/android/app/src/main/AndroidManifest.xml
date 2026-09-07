@@ -1,0 +1,123 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- BLE. On Android 12+ (API 31) scanning and connecting use the runtime
+         BLUETOOTH_SCAN / BLUETOOTH_CONNECT permissions; neverForLocation tells
+         the system we do not derive location from BLE, so no location grant is
+         needed. On API 30 and below the legacy permissions apply, and a scan
+         still requires ACCESS_FINE_LOCATION. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
+
+    <!-- Background collection. The foreground service is what keeps this
+         process, and with it the BLE connection, alive once the app is off
+         screen; without it the ring has nowhere to flush to and its buffer
+         fills until the oldest readings are overwritten. From Android 14 the service must declare a type and
+         hold the matching permission, and it is refused at *runtime* if either
+         is missing, so both belong here.
+
+         POST_NOTIFICATIONS: the service runs without it, but its notification
+         is the only always-visible sign that collection is alive, and a silent
+         app that has stopped collecting must not look like one that is.
+
+         RECEIVE_BOOT_COMPLETED: a phone that restarts overnight otherwise stops
+         collecting until someone opens the app.
+
+         REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: One UI will otherwise put this
+         app to sleep on its own schedule. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"
+        tools:targetApi="34" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
+        tools:targetApi="tiramisu" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission
+        android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <uses-feature android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
+    <!-- **No INTERNET permission, deliberately.** Readings go from the ring to
+         this phone's database and no further; the app has no upload path and
+         nothing to talk to. Leaving the permission off is the only version of
+         that claim a user can check without reading the source, and adding it
+         back is the honest cost of adding a backend.
+
+         There is no networkSecurityConfig either, so Android's default applies
+         and cleartext is denied. -->
+    <application
+        android:label="SenseRing"
+        android:name=".SenseRingApplication"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- stopWithTask="false" is the line that makes swiping the app away
+             stop being the end of monitoring. Without it Android destroys the
+             service with the task, and the process, and with it the Dart
+             isolate holding the ring. -->
+        <service
+            android:name=".RingService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- exported: the system sends BOOT_COMPLETED from outside the app, so
+             this one has to be reachable. It does nothing but start the
+             service, and only if the user had monitoring on. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>
