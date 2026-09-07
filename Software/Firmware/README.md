@@ -1,6 +1,6 @@
 # SenseRing firmware
 
-Firmware for the SenseRing 1.0: an nRF52832 that measures heart rate and blood
+Zephyr OS app for the SenseRing 1.0: an nRF52832 that measures heart rate and blood
 oxygen from the finger, stores every reading to on-board flash, and hands the
 log to a phone over Bluetooth.
 
