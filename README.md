@@ -98,7 +98,7 @@ The current repository does **not** include production exports such as Gerbers, 
 
 ## Contributing
 
-Issues, design reviews, firmware ports, enclosure variants, measurements, and reproducibility notes are welcome. When reporting a hardware problem, please include the board revision, power source, programmer/debugger, and enough measurements or logs to reproduce it.
+Issues, design reviews, firmware ports, enclosure variants, measurements, and reproducibility notes are welcome. 
 
 ## License
 
