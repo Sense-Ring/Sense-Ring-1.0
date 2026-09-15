@@ -53,6 +53,34 @@ The nRF52832 communicates with the PPG sensor, accelerometer, and charger over a
 | `TX` test pad | `P0.30 / AIN6` | Firmware-assignable test/UART signal |
 | `RX` test pad | `P0.25` | Firmware-assignable test/UART signal |
 
+## Battery benchmark
+
+Measured with a Power Profiler Kit II supplying the board in place of the 31 mAh cell, running the normal cycle: 15 s window, five readings, LED rail down, 90 s pause. IMU on throughout, BLE advertising. This replaces the estimate in [`ARCHITECTURE.md`](Software/Firmware/src/ARCHITECTURE.md) §5.1.1 (~305 µA, four days).
+
+<p align="center">
+  <img src="Images/Current.png" alt="Average load current per mode: 1.35 mA sampling, 0.07 mA sleep, 0.41 mA over the full cycle" width="800" />
+  <img src="Images/PPK2_load_current.png" alt="Power Profiler Kit II capture of ten minutes of SenseRing load current" width="800" />
+</p>
+
+| Mode | Average load current | Duration |
+| --- | --- | --- |
+| Sampling (LED rail up) | 1.35 mA | 31 s |
+| Sleep (IMU and BLE only) | 0.07 mA | 90 s |
+| **Full cycle** | **0.41 mA** | **121 s** |
+
+31 s of sampling against a 90 s pause is 25.6 % duty. Over ten minutes the capture reads 410.55 µA average, 246.33 mC, 14.85 mA peak. One full pause reads 62.75 µA: the BMA530 at ~15 µA, the nRF52832 idle, and both load switches open.
+
+### Runtime on 31 mAh
+
+| Quantity | Value |
+| --- | --- |
+| Charge per cycle | 13.7 µAh (~49 mC) |
+| Cycles per charge | ~2,250 |
+| Readings per charge | ~11,250 |
+| **Runtime, default cadence** | **~75 h (3.1 days)** |
+| Sampling continuously | ~23 h |
+| Sleep floor only | ~440 h (18 days) |
+
 ## Repository contents
 
 | Path | Contents |
@@ -60,7 +88,8 @@ The nRF52832 communicates with the PPG sensor, accelerometer, and charger over a
 | [`Hardware/`](Hardware/) | Autodesk Fusion Electronics/EAGLE schematic and board sources (`.fsch`, `.fbrd`, `.sch`, `.brd`) and a [schematic PDF](Hardware/SenseRing_schematic.pdf) |
 | [`Mechanical/`](Mechanical/) | Complete Fusion 360 archive, STEP and OBJ assemblies, printable shell STLs, board and battery models, and two programming-fixture STLs |
 | [`Images/`](Images/) | Prototype photographs and the exploded assembly render used in this README |
-| [`Software/`](Software/) | Firmware and mobile app |
+| [`Software/Firmware/`](Software/Firmware/) | nRF52832 firmware: sampling, the vitals estimator, the flash log, and the BLE peripheral |
+| [`Software/App/`](Software/App/) | Android companion app: collects the ring's buffered log over BLE, stores it locally and charts it |
 
 ## Working with the design
 
@@ -98,7 +127,7 @@ The current repository does **not** include production exports such as Gerbers, 
 
 ## Contributing
 
-Issues, design reviews, firmware ports, enclosure variants, measurements, and reproducibility notes are welcome. 
+Issues, design reviews, firmware ports, enclosure variants, measurements, and reproducibility notes are welcome. When reporting a hardware problem, please include the board revision, power source, programmer/debugger, and enough measurements or logs to reproduce it.
 
 ## License
 
